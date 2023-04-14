@@ -1,38 +1,16 @@
+import asyncio
 import base64
-from typing import List
+import websockets
 import psycopg2
-from dataclasses import dataclass
 from fastapi import FastAPI
-
+from pydantic import BaseModel
+from typing import List
 app = FastAPI()
 
-
-@dataclass
-class Credentials:
-    username: str
-    password: str
+playback_status = {}
 
 
-@dataclass
-class Song:
-    title: str
-    audio: bytes
-
-
-@dataclass
-class AddSongList:
-    username: str
-    songs: List[Song]
-
-
-@dataclass
-class DeleteSongList:
-    username: str
-    song_titles: List[str]
-
-
-@app.post("/login")
-async def login(credentials: Credentials):
+def get_db_cursor():
     conn = psycopg2.connect(
         host="localhost",
         port=5432,
@@ -40,7 +18,32 @@ async def login(credentials: Credentials):
         user="vu",
         password="vu"
     )
-    cursor = conn.cursor()
+    return conn.cursor()
+
+
+class Credentials(BaseModel):
+    username: str
+    password: str
+
+
+class Song(BaseModel):
+    title: str
+    audio: bytes
+
+
+class AddSongList(BaseModel):
+    username: str
+    songs: List[Song]
+
+
+class DeleteSongList(BaseModel):
+    username: str
+    song_titles: List[str]
+
+
+@app.post("/login")
+async def login(credentials: Credentials):
+    cursor = get_db_cursor()
 
     cursor.execute('''
         SELECT * FROM users WHERE username = %s AND password = %s
@@ -56,14 +59,7 @@ async def login(credentials: Credentials):
 
 @app.post("/register")
 async def register(credentials: Credentials):
-    conn = psycopg2.connect(
-        host="localhost",
-        port=5432,
-        database="pbl5",
-        user="vu",
-        password="vu"
-    )
-    cursor = conn.cursor()
+    cursor = get_db_cursor()
 
     try:
         cursor.execute('''
@@ -71,32 +67,26 @@ async def register(credentials: Credentials):
                 VALUES (%s, %s)
             ''', (credentials.username, credentials.password))
 
-        conn.commit()
-        conn.close()
+        cursor.connection.commit()
+        cursor.close()
         return {"result": "success", "message": "Register successfully"}
 
     except psycopg2.IntegrityError as e:
-        conn.rollback()
-        conn.close()
+        cursor.connection.rollback()
+        cursor.close()
         return {"result": "failed", "message": "The username is already taken"}
 
 
 @app.get("/songs/{username}")
 async def get_song_titles(username: str):
-    conn = psycopg2.connect(
-        host="localhost",
-        port=5432,
-        database="pbl5",
-        user="vu",
-        password="vu"
-    )
-    cursor = conn.cursor()
+    cursor = get_db_cursor()
+
     cursor.execute('''
         SELECT title FROM songs WHERE owner = %s
     ''', [username])
 
     rows = cursor.fetchall()
-    conn.close()
+    cursor.close()
 
     if len(rows):
         titles = [row[0] for row in rows]
@@ -105,17 +95,30 @@ async def get_song_titles(username: str):
         return []
 
 
+async def play_song(websocket, path):
+    song_title = await websocket.recv()
+
+    cursor = get_db_cursor()
+    cursor.execute('''
+        SELECT audio FROM songs WHERE title = %s
+    ''', [song_title])
+    result = cursor.fetchone()
+    cursor.close()
+
+    if result is not None:
+        audio_data = result[0]
+        for i in range(0, len(audio_data), 1024):
+            chunk = audio_data[i:i + 1024]
+            await websocket.send(base64.b64encode(chunk).decode('utf-8'))
+
+        await websocket.send('Song finished playing')
+    else:
+        await websocket.send('Song not found')
+
 
 @app.post("/add-songs")
 async def add_songs(add_song_list: AddSongList):
-    conn = psycopg2.connect(
-        host="localhost",
-        port=5432,
-        database="pbl5",
-        user="vu",
-        password="vu"
-    )
-    cursor = conn.cursor()
+    cursor = get_db_cursor()
 
     try:
         for song in add_song_list.songs:
@@ -124,26 +127,19 @@ async def add_songs(add_song_list: AddSongList):
                 VALUES (%s, %s, %s)
             ''', (song.title, base64.b64decode(song.audio), add_song_list.username))
 
-        conn.commit()
-        conn.close()
+        cursor.connection.commit()
+        cursor.close()
         return {"result": "success", "message": "Songs added successfully"}
 
     except Exception as e:
-        conn.rollback()
-        conn.close()
+        cursor.connection.rollback()
+        cursor.close()
         return {"result": "failed", "message": str(e)}
 
 
 @app.post("/delete-songs")
 async def delete_songs(delete_song_list: DeleteSongList):
-    conn = psycopg2.connect(
-        host="localhost",
-        port=5432,
-        database="pbl5",
-        user="vu",
-        password="vu"
-    )
-    cursor = conn.cursor()
+    cursor = get_db_cursor()
 
     try:
         for title in delete_song_list.song_titles:
@@ -151,11 +147,19 @@ async def delete_songs(delete_song_list: DeleteSongList):
                 DELETE FROM songs WHERE owner = %s AND title = %s
             ''', (delete_song_list.username, title))
 
-        conn.commit()
-        conn.close()
+        cursor.connection.commit()
+        cursor.close()
         return {"result": "success", "message": "Songs deleted successfully"}
 
     except Exception as e:
-        conn.rollback()
-        conn.close()
+        cursor.connection.rollback()
+        cursor.close()
         return {"result": "failed", "message": str(e)}
+
+
+async def websocket_server():
+    async with websockets.serve(play_song, "localhost", 8765):
+        await asyncio.Future()  # run forever
+
+
+asyncio.ensure_future(websocket_server())

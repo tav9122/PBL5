@@ -1,6 +1,12 @@
+import asyncio
+import base64
+import threading
 import tkinter as tk
 from tkinter import ttk
 import requests
+import websockets
+import pyaudio
+
 from SongManagerForm import SongManagerForm
 
 
@@ -95,11 +101,42 @@ class MusicPlayer:
         self.logout_button.pack(side=tk.BOTTOM, padx=10, pady=(0, 15))
 
         response = requests.get(f"http://localhost:8000/songs/{self.username}")
+
+        if response.json():
+            self.play.config(state=tk.NORMAL)
+
         for title in response.json():
             self.listbox.insert(tk.END, title)
 
     def play_music(self):
-        pass
+        async def _play_music():
+            p = pyaudio.PyAudio()
+
+            stream = p.open(format=pyaudio.paFloat32,
+                            channels=1,
+                            rate=44100,
+                            output=True)
+
+            async with websockets.connect('ws://localhost:8765/play-song') as websocket:
+                await websocket.send(self.listbox.get(self.listbox.curselection()))
+
+                async for audio_chunk in websocket:
+                    audio_data = base64.b64decode(audio_chunk)
+
+                    stream.write(audio_data)
+
+            stream.stop_stream()
+            stream.close()
+            p.terminate()
+
+        loop = asyncio.new_event_loop()
+
+        asyncio.set_event_loop(loop)
+
+        loop.create_task(_play_music())
+
+        t = threading.Thread(target=loop.run_forever)
+        t.start()
 
     def pause_resume_music(self):
         pass
@@ -114,9 +151,6 @@ class MusicPlayer:
         pass
 
     def skip_backward(self):
-        pass
-
-    def loop(self):
         pass
 
     def progress_bar_slide(self, _):
