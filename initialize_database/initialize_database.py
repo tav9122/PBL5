@@ -42,19 +42,19 @@ def audio_to_binary_data(filename):
 cursor.execute('''
 INSERT INTO songs (title, audio, owner)
 VALUES (%s, %s, %s)
-''', ('[MV OFFICIAL] CHƯA BAO GIỜ - TRUNG QUÂN - 4K.mp3', audio_to_binary_data(
-    '[MV OFFICIAL] CHƯA BAO GIỜ - TRUNG QUÂN - 4K.mp3'), 'user'))
+''', ('[MV OFFICIAL] CHƯA BAO GIỜ - TRUNG QUÂN - 4K.wav', audio_to_binary_data(
+    '[MV OFFICIAL] CHƯA BAO GIỜ - TRUNG QUÂN - 4K.wav'), 'user'))
 
 cursor.execute('''
 INSERT INTO songs (title, audio, owner)
 VALUES (%s, %s, %s)
-''', ('[YamiSora] Requiem - Nao Hiiragi - Vietsub.mp3', audio_to_binary_data(
-    '[YamiSora] Requiem - Nao Hiiragi - Vietsub.mp3'), 'user'))
+''', ('[YamiSora] Requiem - Nao Hiiragi - Vietsub.wav', audio_to_binary_data(
+    '[YamiSora] Requiem - Nao Hiiragi - Vietsub.wav'), 'user'))
 
 cursor.execute('''
 INSERT INTO songs (title, audio, owner)
 VALUES (%s, %s, %s)
-''', ('Train - Save Me, San Francisco.mp3', audio_to_binary_data('Train - Save Me, San Francisco.mp3'), 'user'))
+''', ('Train - Save Me, San Francisco.wav', audio_to_binary_data('Train - Save Me, San Francisco.wav'), 'user'))
 
 conn.commit()
 

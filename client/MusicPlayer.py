@@ -269,6 +269,7 @@ class MusicPlayer:
             self.pause_resume_music()
 
     def logout(self):
+        pygame.mixer.music.stop()
         self.top.destroy()
         self.master.deiconify()
 

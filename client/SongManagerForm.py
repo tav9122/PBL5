@@ -14,6 +14,11 @@ def is_currently_playing(song_title):
         return True
 
 
+def is_in_cache(song_title):
+    song_path = f"cache_song/{song_title}"
+    return os.path.exists(song_path)
+
+
 class SongManagerForm:
     def __init__(self, master, username):
         self.username = username
@@ -94,7 +99,7 @@ class SongManagerForm:
         current_playing_song = None
         for idx in selected_songs:
             song_title = self.listbox.get(idx)
-            if is_currently_playing(song_title):
+            if is_in_cache(song_title) and is_currently_playing(song_title):
                 current_playing_song = song_title
                 continue
             song_titles.append(song_title)
@@ -112,7 +117,8 @@ class SongManagerForm:
             messagebox.showinfo("Kết quả", response.json()["message"])
             for song_title in song_titles:
                 song_path = f"cache_song/{song_title}"
-                os.remove(song_path)
+                if is_in_cache(song_title):
+                    os.remove(song_path)
             self.get_song_list()
         else:
             messagebox.showerror("Kết quả", response.json()["message"])
