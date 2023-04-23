@@ -1,14 +1,24 @@
 import base64
+import os
 import tkinter as tk
 from tkinter import filedialog, messagebox
 import requests
+
+
+def is_currently_playing(song_title):
+    song_path = f"cache_song/{song_title}"
+    try:
+        os.rename(song_path, song_path)
+        return False
+    except OSError:
+        return True
 
 
 class SongManagerForm:
     def __init__(self, master, username):
         self.username = username
         self.master = master
-        self.master.title("Music Manager")
+        self.master.title("Quản lí nhạc")
 
         screen_width = self.master.winfo_screenwidth()
         screen_height = self.master.winfo_screenheight()
@@ -22,21 +32,18 @@ class SongManagerForm:
         self.function_frame = tk.Frame(self.master)
         self.function_frame.pack(side=tk.TOP, padx=5, pady=5, fill=tk.BOTH, expand=True)
 
-        self.add_songs_button = tk.Button(self.function_frame, text="Add songs", command=self.add_songs)
+        self.add_songs_button = tk.Button(self.function_frame, text="Thêm bài hát", command=self.add_songs)
         self.add_songs_button.pack(side=tk.LEFT, padx=10)
 
-        self.delete_songs = tk.Button(self.function_frame, text="Delete songs", command=self.delete_songs)
+        self.delete_songs = tk.Button(self.function_frame, text="Xóa bài hát", command=self.delete_songs)
         self.delete_songs.pack(side=tk.LEFT, padx=10)
 
-        response = requests.get(f"http://localhost:8000/songs/{self.username}")
-
-        for title in response.json():
-            self.listbox.insert(tk.END, title)
+        self.get_song_list()
 
     def add_songs(self):
         file_types = [('Music Files', """*.mp3 *.mp4 *.m4a *.m4b *.m4r *.m4v *.alac *.aax *.aaxc *.wav *.ogg *.opus 
         *.flac *.wma""")]
-        song_paths = filedialog.askopenfilenames(title="Choose songs", filetypes=file_types)
+        song_paths = filedialog.askopenfilenames(title="Chọn các bài hát", filetypes=file_types)
 
         if len(song_paths) == 0:
             return
@@ -60,7 +67,7 @@ class SongManagerForm:
             songs.append(song)
 
         if duplicate_songs:
-            messagebox.showerror("Error", f"Duplicate songs: {', '.join(duplicate_songs)} won't be added")
+            messagebox.showerror("Error", f"Các bài lặp lại: {', '.join(duplicate_songs)} sẽ không được thêm")
 
         if len(songs) == 0:
             return
@@ -72,22 +79,29 @@ class SongManagerForm:
 
         response = requests.post("http://localhost:8000/add-songs", json=data)
         if response.json()["result"] == "success":
-            messagebox.showinfo("Result", response.json()["message"])
-
-            response = requests.get(f"http://localhost:8000/songs/{self.username}")
-            self.listbox.delete(0, tk.END)
-            for title in response.json():
-                self.listbox.insert(tk.END, title)
+            messagebox.showinfo("Kết quả", response.json()["message"])
+            self.get_song_list()
         else:
-            messagebox.showerror("Result", response.json()["message"])
+            messagebox.showerror("Kết quả", response.json()["message"])
 
     def delete_songs(self):
         selected_songs = self.listbox.curselection()
         if len(selected_songs) == 0:
-            messagebox.showerror("Error", "Choose at least 1 song to delete")
+            messagebox.showerror("Lỗi", "Chọn ít nhất một bài để xóa")
             return
 
-        song_titles = [self.listbox.get(idx) for idx in selected_songs]
+        song_titles = []
+        current_playing_song = None
+        for idx in selected_songs:
+            song_title = self.listbox.get(idx)
+            if is_currently_playing(song_title):
+                current_playing_song = song_title
+                continue
+            song_titles.append(song_title)
+
+        if current_playing_song:
+            messagebox.showerror("Lỗi", f"Sẽ không xóa {current_playing_song} vì bài hát đang được phát")
+
         data = {
             'username': self.username,
             'song_titles': song_titles
@@ -95,11 +109,16 @@ class SongManagerForm:
 
         response = requests.post("http://localhost:8000/delete-songs", json=data)
         if response.json()["result"] == "success":
-            messagebox.showinfo("Result", response.json()["message"])
-
-            response = requests.get(f"http://localhost:8000/songs/{self.username}")
-            self.listbox.delete(0, tk.END)
-            for title in response.json():
-                self.listbox.insert(tk.END, title)
+            messagebox.showinfo("Kết quả", response.json()["message"])
+            for song_title in song_titles:
+                song_path = f"cache_song/{song_title}"
+                os.remove(song_path)
+            self.get_song_list()
         else:
-            messagebox.showerror("Result", response.json()["message"])
+            messagebox.showerror("Kết quả", response.json()["message"])
+
+    def get_song_list(self):
+        self.listbox.delete(0, tk.END)
+        response = requests.get(f"http://localhost:8000/{self.username}/songs")
+        for title in response.json():
+            self.listbox.insert(tk.END, title)

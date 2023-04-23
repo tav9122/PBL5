@@ -1,10 +1,9 @@
-import asyncio
 import base64
-import websockets
 import psycopg2
 from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import List
+
 app = FastAPI()
 
 playback_status = {}
@@ -52,9 +51,9 @@ async def login(credentials: Credentials):
     result = cursor.fetchone()
 
     if result is not None:
-        return {"result": "success", "message": "Login successfully"}
+        return {"result": "success", "message": "Đăng nhập thành công"}
     else:
-        return {"result": "failed", "message": "Wrong username or password"}
+        return {"result": "failed", "message": "Sai tài khoản hoặc mật khẩu"}
 
 
 @app.post("/register")
@@ -69,15 +68,15 @@ async def register(credentials: Credentials):
 
         cursor.connection.commit()
         cursor.close()
-        return {"result": "success", "message": "Register successfully"}
+        return {"result": "success", "message": "Đăng kí thành công"}
 
     except psycopg2.IntegrityError as e:
         cursor.connection.rollback()
         cursor.close()
-        return {"result": "failed", "message": "The username is already taken"}
+        return {"result": "failed", "message": "Tên đã có người sử dụng"}
 
 
-@app.get("/songs/{username}")
+@app.get("/{username}/songs")
 async def get_song_titles(username: str):
     cursor = get_db_cursor()
 
@@ -95,25 +94,21 @@ async def get_song_titles(username: str):
         return []
 
 
-async def play_song(websocket, path):
-    song_title = await websocket.recv()
-
+@app.get("/{username}/songs/{title}")
+async def get_song(username: str, title: str):
     cursor = get_db_cursor()
+
     cursor.execute('''
-        SELECT audio FROM songs WHERE title = %s
-    ''', [song_title])
-    result = cursor.fetchone()
+        SELECT audio FROM songs WHERE owner = %s AND title = %s
+    ''', (username, title))
+
+    row = cursor.fetchone()
     cursor.close()
 
-    if result is not None:
-        audio_data = result[0]
-        for i in range(0, len(audio_data), 1024):
-            chunk = audio_data[i:i + 1024]
-            await websocket.send(base64.b64encode(chunk).decode('utf-8'))
-
-        await websocket.send('Song finished playing')
+    if row is not None:
+        return base64.b64encode(row[0]).decode('utf-8')
     else:
-        await websocket.send('Song not found')
+        return None
 
 
 @app.post("/add-songs")
@@ -129,7 +124,7 @@ async def add_songs(add_song_list: AddSongList):
 
         cursor.connection.commit()
         cursor.close()
-        return {"result": "success", "message": "Songs added successfully"}
+        return {"result": "success", "message": "Thêm bài hát thành công"}
 
     except Exception as e:
         cursor.connection.rollback()
@@ -149,17 +144,9 @@ async def delete_songs(delete_song_list: DeleteSongList):
 
         cursor.connection.commit()
         cursor.close()
-        return {"result": "success", "message": "Songs deleted successfully"}
+        return {"result": "success", "message": "Xóa bài hát thành công"}
 
     except Exception as e:
         cursor.connection.rollback()
         cursor.close()
         return {"result": "failed", "message": str(e)}
-
-
-async def websocket_server():
-    async with websockets.serve(play_song, "localhost", 8765):
-        await asyncio.Future()  # run forever
-
-
-asyncio.ensure_future(websocket_server())
