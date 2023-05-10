@@ -64,7 +64,7 @@ class LoginForm:
         if response.json()["result"] == "success":
             messagebox.showinfo("Kết quả", response.json()["message"])
             self.master.withdraw()
-            self.main_gui = MusicPlayer(self.master, self.username_entry.get())
+            self.main_gui = MusicPlayer(self.master, self.username_entry.get(), response.json()["access_token"])
             self.username_entry.delete(0, tk.END)
             self.password_entry.delete(0, tk.END)
         else:

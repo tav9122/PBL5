@@ -12,8 +12,9 @@ from SongManagerForm import SongManagerForm
 
 
 class MusicPlayer:
-    def __init__(self, master, username):
+    def __init__(self, master, username, access_token):
         self.username = username
+        self.access_token = access_token
         self.master = master
         self.top = tk.Toplevel(self.master)
         self.top.title("Music Player")
@@ -274,13 +275,16 @@ class MusicPlayer:
         self.master.deiconify()
 
     def show_song_manager(self):
-        song_manager_form = SongManagerForm(tk.Toplevel(self.top), self.username)
+        song_manager_form = SongManagerForm(tk.Toplevel(self.top), self.username, self.access_token)
         self.top.wait_window(song_manager_form.master)
         self.get_song_list()
 
     def get_song_list(self):
         self.listbox.delete(0, tk.END)
-        response = requests.get(f"http://localhost:8000/{self.username}/songs")
+        headers = {
+            "Authorization": f"Bearer {self.access_token}"
+        }
+        response = requests.get(f"http://localhost:8000/{self.username}/songs", headers=headers)
 
         if response.json():
             self.play.config(state=tk.NORMAL)
@@ -313,7 +317,11 @@ class MusicPlayer:
 
     def get_song(self, title):
         if not os.path.exists(f"cache_song/{title}"):
-            response = requests.get(f"http://localhost:8000/{self.username}/songs/{title}")
+            headers = {
+                "Authorization": f"Bearer {self.access_token}"
+            }
+            response = requests.get(f"http://localhost:8000/{self.username}/songs/{title}", headers=headers)
+
             with open(f"cache_song/{title}", "wb") as f:
                 f.write(base64.b64decode(response.json()))
         return f"cache_song/{title}"

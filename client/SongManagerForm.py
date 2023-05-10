@@ -20,8 +20,9 @@ def is_in_cache(song_title):
 
 
 class SongManagerForm:
-    def __init__(self, master, username):
+    def __init__(self, master, username, access_token):
         self.username = username
+        self.access_token = access_token
         self.master = master
         self.master.title("Quản lí nhạc")
 
@@ -81,8 +82,11 @@ class SongManagerForm:
             'username': self.username,
             'songs': songs
         }
+        headers = {
+            'Authorization': f'Bearer {self.access_token}'
+        }
 
-        response = requests.post("http://localhost:8000/add-songs", json=data)
+        response = requests.post("http://localhost:8000/add-songs", json=data, headers=headers)
         if response.json()["result"] == "success":
             messagebox.showinfo("Kết quả", response.json()["message"])
             self.get_song_list()
@@ -111,8 +115,12 @@ class SongManagerForm:
             'username': self.username,
             'song_titles': song_titles
         }
+        headers = {
+            'Authorization': f'Bearer {self.access_token}'
+        }
 
-        response = requests.post("http://localhost:8000/delete-songs", json=data)
+        response = requests.post("http://localhost:8000/delete-songs", json=data, headers=headers)
+
         if response.json()["result"] == "success":
             messagebox.showinfo("Kết quả", response.json()["message"])
             for song_title in song_titles:
@@ -125,6 +133,10 @@ class SongManagerForm:
 
     def get_song_list(self):
         self.listbox.delete(0, tk.END)
-        response = requests.get(f"http://localhost:8000/{self.username}/songs")
+        headers = {
+            'Authorization': f'Bearer {self.access_token}'
+        }
+
+        response = requests.get(f"http://localhost:8000/{self.username}/songs", headers=headers)
         for title in response.json():
             self.listbox.insert(tk.END, title)
