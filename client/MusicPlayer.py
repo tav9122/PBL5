@@ -8,6 +8,7 @@ import requests
 import pygame
 from tinytag import TinyTag
 import socket
+import threading
 
 from SongManagerForm import SongManagerForm
 
@@ -22,9 +23,9 @@ class MusicPlayer:
 
         screen_width = self.top.winfo_screenwidth()
         screen_height = self.top.winfo_screenheight()
-        x = (screen_width / 2) - (1200 / 2)
-        y = (screen_height / 2) - (1000 / 2)
-        self.top.geometry(f"1200x850+{int(x)}+{int(y)}")
+        x = (screen_width / 2) - (700 / 2)
+        y = (screen_height / 2) - (600 / 2)
+        self.top.geometry(f"700x450+{int(x)}+{int(y)}")
 
         self.listbox = tk.Listbox(self.top, selectmode=tk.SINGLE)
         self.listbox.pack(side=tk.TOP, padx=10, pady=10, fill=tk.BOTH, expand=True)
@@ -111,7 +112,8 @@ class MusicPlayer:
         self.get_song_list()
         pygame.mixer.init()
 
-        self.voice_control()
+        self.voice_control_thread = threading.Thread(target=self.voice_control)
+        self.voice_control_thread.start()
 
     def play_music(self):
         if self.paused:
@@ -330,7 +332,7 @@ class MusicPlayer:
         return f"cache_song/{title}"
     
     def voice_control(self):
-        HOST = "127.0.0.1"
+        HOST = "localhost"
         PORT = 1234
         
         wake_up = False
@@ -354,9 +356,11 @@ class MusicPlayer:
                             continue
                         elif data_str == "amluongmottram":
                             pygame.mixer.music.set_volume(1)
+                            self.volume_value_label.config(text=f"{int(pygame.mixer.music.get_volume() * 100)}%")
                             wake_up = False
                         elif data_str == "amluongnammuoi":
                             pygame.mixer.music.set_volume(0.5)
+                            self.volume_value_label.config(text=f"{int(pygame.mixer.music.get_volume() * 100)}%")
                             wake_up = False
                         elif data_str == "baitiep":
                             self.next_song()

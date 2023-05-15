@@ -12,9 +12,9 @@ class LoginForm:
 
         screen_width = self.master.winfo_screenwidth()
         screen_height = self.master.winfo_screenheight()
-        x = (screen_width / 2) - (500 / 2)
-        y = (screen_height / 2) - (500 / 2)
-        self.master.geometry(f"500x250+{int(x)}+{int(y)}")
+        x = (screen_width / 2) - (250 / 2)
+        y = (screen_height / 2) - (300 / 2)
+        self.master.geometry(f"250x150+{int(x)}+{int(y)}")
 
         self.username_frame = tk.Frame(self.master)
         self.username_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)

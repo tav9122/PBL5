@@ -28,9 +28,9 @@ class SongManagerForm:
 
         screen_width = self.master.winfo_screenwidth()
         screen_height = self.master.winfo_screenheight()
-        x = (screen_width / 2) - (1200 / 2)
-        y = (screen_height / 2) - (700 / 2)
-        self.master.geometry(f"1200x575+{int(x)}+{int(y)}")
+        x = (screen_width / 2) - (600 / 2)
+        y = (screen_height / 2) - (500 / 2)
+        self.master.geometry(f"600x300+{int(x)}+{int(y)}")
 
         self.listbox = tk.Listbox(self.master, selectmode=tk.MULTIPLE)
         self.listbox.pack(side=tk.TOP, padx=10, fill=tk.BOTH, expand=True)

@@ -11,9 +11,9 @@ class RegisterForm:
 
         screen_width = self.register_window.winfo_screenwidth()
         screen_height = self.register_window.winfo_screenheight()
-        x = (screen_width / 2) - (400 / 2)
-        y = (screen_height / 2) - (250 / 2)
-        self.register_window.geometry(f"400x250+{int(x)}+{int(y)}")
+        x = (screen_width / 2) - (300 / 2)
+        y = (screen_height / 2) - (300 / 2)
+        self.register_window.geometry(f"300x175+{int(x)}+{int(y)}")
 
         self.register_username_frame = tk.Frame(self.register_window)
         self.register_username_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
