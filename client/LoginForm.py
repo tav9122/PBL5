@@ -59,7 +59,7 @@ class LoginForm:
             "password": password
         }
 
-        response = requests.post("http://localhost:8000/login", json=credentials)
+        response = requests.post("http://127.0.0.1:8000/login", json=credentials)
 
         if response.json()["result"] == "success":
             messagebox.showinfo("Kết quả", response.json()["message"])

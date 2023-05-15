@@ -7,6 +7,7 @@ from tkinter import ttk
 import requests
 import pygame
 from tinytag import TinyTag
+import socket
 
 from SongManagerForm import SongManagerForm
 
@@ -109,6 +110,8 @@ class MusicPlayer:
 
         self.get_song_list()
         pygame.mixer.init()
+
+        self.voice_control()
 
     def play_music(self):
         if self.paused:
@@ -284,7 +287,7 @@ class MusicPlayer:
         headers = {
             "Authorization": f"Bearer {self.access_token}"
         }
-        response = requests.get(f"http://localhost:8000/{self.username}/songs", headers=headers)
+        response = requests.get(f"http://127.0.0.1:8000/{self.username}/songs", headers=headers)
 
         if response.json():
             self.play.config(state=tk.NORMAL)
@@ -320,9 +323,71 @@ class MusicPlayer:
             headers = {
                 "Authorization": f"Bearer {self.access_token}"
             }
-            response = requests.get(f"http://localhost:8000/{self.username}/songs/{title}", headers=headers)
+            response = requests.get(f"http://127.0.0.1:8000/{self.username}/songs/{title}", headers=headers)
 
             with open(f"cache_song/{title}", "wb") as f:
                 f.write(base64.b64decode(response.json()))
         return f"cache_song/{title}"
+    
+    def voice_control(self):
+        HOST = "127.0.0.1"
+        PORT = 1234
+        
+        wake_up = False
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.bind((HOST, PORT))
+            s.listen(5)
+            while True:
+                conn, addr = s.accept()
+                with conn:
+                    while True:
+                        data = conn.recv(1024)
+                        if not data:
+                            break
+                        data_str = data.decode()
+                        print(data_str)
+                        if data_str == "Say something..." or data_str == "XXX":
+                            continue
+                        if data_str == "davit":
+                            wake_up = True
+                        if wake_up == False:
+                            continue
+                        elif data_str == "amluongmottram":
+                            pygame.mixer.music.set_volume(1)
+                            wake_up = False
+                        elif data_str == "amluongnammuoi":
+                            pygame.mixer.music.set_volume(0.5)
+                            wake_up = False
+                        elif data_str == "baitiep":
+                            self.next_song()
+                            wake_up = False
+                        elif data_str == "baitruoc":
+                            self.previous_song()
+                            wake_up = False
+                        elif data_str == "dung":
+                            self.pause_resume_music()
+                            wake_up = False
+                        elif data_str == "luinamgiay":
+                            self.rewind()
+                            wake_up = False
+                        elif data_str == "phat":
+                            self.play_music()
+                            wake_up = False
+                        elif data_str == "phatlaplai":
+                            self.play_mode = "Tuần tự"
+                            self.change_play_mode()
+                            wake_up = False
+                        elif data_str == "phatngaunhien":
+                            self.play_mode = "Lặp lại"
+                            self.change_play_mode()
+                            wake_up = False
+                        elif data_str == "phattuantu":
+                            self.play_mode = "Ngẫu nhiên"
+                            self.change_play_mode()
+                            wake_up = False
+                        elif data_str == "tatam":
+                            pygame.mixer.music.set_volume(0)
+                            wake_up = False
+                        elif data_str == "toinamgiay":
+                            self.fast_forward()
 

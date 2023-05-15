@@ -86,7 +86,7 @@ class SongManagerForm:
             'Authorization': f'Bearer {self.access_token}'
         }
 
-        response = requests.post("http://localhost:8000/add-songs", json=data, headers=headers)
+        response = requests.post("http://127.0.0.1:8000/add-songs", json=data, headers=headers)
         if response.json()["result"] == "success":
             messagebox.showinfo("Kết quả", response.json()["message"])
             self.get_song_list()
@@ -119,7 +119,7 @@ class SongManagerForm:
             'Authorization': f'Bearer {self.access_token}'
         }
 
-        response = requests.post("http://localhost:8000/delete-songs", json=data, headers=headers)
+        response = requests.post("http://127.0.0.1:8000/delete-songs", json=data, headers=headers)
 
         if response.json()["result"] == "success":
             messagebox.showinfo("Kết quả", response.json()["message"])
@@ -137,6 +137,6 @@ class SongManagerForm:
             'Authorization': f'Bearer {self.access_token}'
         }
 
-        response = requests.get(f"http://localhost:8000/{self.username}/songs", headers=headers)
+        response = requests.get(f"http://127.0.0.1:8000/{self.username}/songs", headers=headers)
         for title in response.json():
             self.listbox.insert(tk.END, title)
