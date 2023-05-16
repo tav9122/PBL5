@@ -355,12 +355,10 @@ class MusicPlayer:
                         if wake_up == False:
                             continue
                         elif data_str == "amluongmottram":
-                            pygame.mixer.music.set_volume(1)
-                            self.volume_value_label.config(text=f"{int(pygame.mixer.music.get_volume() * 100)}%")
+                            self.volume_bar.set(1)
                             wake_up = False
                         elif data_str == "amluongnammuoi":
-                            pygame.mixer.music.set_volume(0.5)
-                            self.volume_value_label.config(text=f"{int(pygame.mixer.music.get_volume() * 100)}%")
+                            self.volume_bar.set(0.5)
                             wake_up = False
                         elif data_str == "baitiep":
                             self.next_song()
@@ -390,7 +388,7 @@ class MusicPlayer:
                             self.change_play_mode()
                             wake_up = False
                         elif data_str == "tatam":
-                            pygame.mixer.music.set_volume(0)
+                            self.volume_bar.set(0)
                             wake_up = False
                         elif data_str == "toinamgiay":
                             self.fast_forward()
