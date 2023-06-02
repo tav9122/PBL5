@@ -33,7 +33,7 @@ def get_db_cursor():
 
 model = {}
 
-class_names =  ['amluongmottram', 'amluongnammuoi', 'baitiep','baitruoc','davit','dung','luinamgiay','phat','phatlaplai','phatngaunhien','phattuantu','tatam','toinamgiay']
+class_names =  ['amluongmottram', 'amluongnammuoi', 'baitieptheo','baitruocdo','batnhac','dunglai','meimei','phatlaplai','phatngaunhien','phattuantu','tatam','tualui','tuatoi']
 audio_format = 'wav'
 
 record_path = 'temp/record.wav'
@@ -60,7 +60,7 @@ def get_mfcc(file_path):
     return X.T 
 
 
-def detect_leading_silence(sound, silence_threshold=-42.0, chunk_size=10):
+def detect_leading_silence(sound, silence_threshold=-25.0, chunk_size=10):
         trim_ms = 0
         assert chunk_size > 0
         while sound[trim_ms:trim_ms + chunk_size].dBFS < silence_threshold and trim_ms < len(sound):

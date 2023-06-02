@@ -289,7 +289,7 @@ class MusicPlayer:
         headers = {
             "Authorization": f"Bearer {self.access_token}"
         }
-        response = requests.get(f"http://127.0.0.1:8000/{self.username}/songs", headers=headers)
+        response = requests.get(f"http://192.168.43.224:8000/{self.username}/songs", headers=headers)
 
         if response.json():
             self.play.config(state=tk.NORMAL)
@@ -325,14 +325,14 @@ class MusicPlayer:
             headers = {
                 "Authorization": f"Bearer {self.access_token}"
             }
-            response = requests.get(f"http://127.0.0.1:8000/{self.username}/songs/{title}", headers=headers)
+            response = requests.get(f"http://192.168.43.224:8000/{self.username}/songs/{title}", headers=headers)
 
             with open(f"cache_song/{title}", "wb") as f:
                 f.write(base64.b64decode(response.json()))
         return f"cache_song/{title}"
     
     def voice_control(self):
-        HOST = "localhost"
+        HOST = "192.168.43.224"
         PORT = 1234
         
         wake_up = False
@@ -350,7 +350,7 @@ class MusicPlayer:
                         print(data_str)
                         if data_str == "Say something..." or data_str == "XXX":
                             continue
-                        if data_str == "davit":
+                        if data_str == "meimei":
                             wake_up = True
                         if wake_up == False:
                             continue
@@ -360,19 +360,19 @@ class MusicPlayer:
                         elif data_str == "amluongnammuoi":
                             self.volume_bar.set(0.5)
                             wake_up = False
-                        elif data_str == "baitiep":
+                        elif data_str == "baitieptheo":
                             self.next_song()
                             wake_up = False
-                        elif data_str == "baitruoc":
+                        elif data_str == "baitruocdo":
                             self.previous_song()
                             wake_up = False
-                        elif data_str == "dung":
+                        elif data_str == "dunglai":
                             self.pause_resume_music()
                             wake_up = False
-                        elif data_str == "luinamgiay":
+                        elif data_str == "tualui":
                             self.rewind()
                             wake_up = False
-                        elif data_str == "phat":
+                        elif data_str == "batnhac":
                             self.play_music()
                             wake_up = False
                         elif data_str == "phatlaplai":
@@ -390,6 +390,6 @@ class MusicPlayer:
                         elif data_str == "tatam":
                             self.volume_bar.set(0)
                             wake_up = False
-                        elif data_str == "toinamgiay":
+                        elif data_str == "tuatoi":
                             self.fast_forward()
 
