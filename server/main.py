@@ -38,7 +38,7 @@ audio_format = 'wav'
 
 record_path = 'temp/record.wav'
 trimmed_path = 'temp/trimmed.wav'
-model_path = 'trained_model'
+model_path = 'new_model'
 
 for key in class_names:
     name = f"{model_path}/model_{key}.pkl"

@@ -9,6 +9,7 @@ import pygame
 from tinytag import TinyTag
 import socket
 import threading
+from playsound import playsound
 
 from SongManagerForm import SongManagerForm
 
@@ -112,6 +113,7 @@ class MusicPlayer:
         self.get_song_list()
         pygame.mixer.init()
 
+        self.stop_thread = False    
         self.voice_control_thread = threading.Thread(target=self.voice_control)
         self.voice_control_thread.start()
 
@@ -275,9 +277,12 @@ class MusicPlayer:
             self.pause_resume_music()
 
     def logout(self):
+        self.stop_thread = True
+        self.voice_control_thread.join(timeout=0.25)
         pygame.mixer.music.stop()
         self.top.destroy()
         self.master.deiconify()
+        
 
     def show_song_manager(self):
         song_manager_form = SongManagerForm(tk.Toplevel(self.top), self.username, self.access_token)
@@ -337,10 +342,15 @@ class MusicPlayer:
         
         wake_up = False
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             s.bind((HOST, PORT))
             s.listen(5)
             while True:
+                if self.stop_thread:
+                    return
+                
                 conn, addr = s.accept()
+            
                 with conn:
                     while True:
                         data = conn.recv(1024)
@@ -351,6 +361,7 @@ class MusicPlayer:
                         if data_str == "Say something..." or data_str == "XXX":
                             continue
                         if data_str == "meimei":
+                            playsound("resources/mixkit-confirmation-tone-2867.wav")
                             wake_up = True
                         if wake_up == False:
                             continue
