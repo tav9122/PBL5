@@ -5,8 +5,8 @@ import socket
 
 RATE = 16000
 RECORD_SECONDS = 1.5
-SERVER_URL = "http://127.0.0.1:8000/predict"
-CLIENT_HOST = "localhost"
+SERVER_URL = "http://192.168.137.1:8000/predict"
+CLIENT_HOST = "192.168.137.1"
 CLIENT_PORT = 1234
 
 def send_word_to_client(word):

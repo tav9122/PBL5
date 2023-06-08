@@ -34,6 +34,11 @@ VALUES ('user', 'user')
 
 
 def audio_to_binary_data(filename):
+    """
+    This function converts an audio file to binary data.
+    @param filename - the name of the audio file
+    @return The binary data of the audio file.
+    """
     with open(filename, 'rb') as file:
         binary_data = file.read()
     return binary_data

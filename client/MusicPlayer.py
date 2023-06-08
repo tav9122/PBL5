@@ -13,6 +13,7 @@ from playsound import playsound
 
 from SongManagerForm import SongManagerForm
 
+server_url = "192.168.137.1"
 
 class MusicPlayer:
     def __init__(self, master, username, access_token):
@@ -118,6 +119,9 @@ class MusicPlayer:
         self.voice_control_thread.start()
 
     def play_music(self):
+        """
+        Play music
+        """
         if self.paused:
             self.pause_resume_music()
 
@@ -142,7 +146,9 @@ class MusicPlayer:
         pygame.mixer.music.play()
 
     def pause_resume_music(self):
-
+        """
+        Pause or resume music
+        """
         if self.paused:
             pygame.mixer.music.load(self.current_song)
             pygame.mixer.music.play(start=int(self.progress_bar.get()))
@@ -156,6 +162,9 @@ class MusicPlayer:
             self.pause_resume_button.config(text="Tiếp tục")
 
     def previous_song(self):
+        """
+        Play previous song
+        """
         if self.play_mode == "Ngẫu nhiên":
             self.play_shuffle()
             return
@@ -176,6 +185,9 @@ class MusicPlayer:
             self.pause_resume_music()
 
     def next_song(self):
+        """
+        Play next song
+        """
         if self.play_mode == "Ngẫu nhiên":
             self.play_shuffle()
             return
@@ -196,6 +208,9 @@ class MusicPlayer:
             self.pause_resume_music()
 
     def fast_forward(self):
+        """
+        Fast forward song
+        """
         self.progress_bar.config(value=self.progress_bar.get() + 5)
 
         if self.progress_bar.get() > TinyTag.get(self.current_song).duration:
@@ -209,7 +224,9 @@ class MusicPlayer:
             self.current_time_label.config(text=f"{time.strftime('%M:%S', time.gmtime(self.progress_bar.get()))}")
 
     def rewind(self):
-
+        """
+        Rewind song
+        """
         self.progress_bar.config(value=self.progress_bar.get() - 5)
 
         if self.progress_bar.get() < 0:
@@ -223,7 +240,9 @@ class MusicPlayer:
             self.current_time_label.config(text=f"{time.strftime('%M:%S', time.gmtime(self.progress_bar.get()))}")
 
     def loop(self):
-
+        """
+        This loop is to manage the progress bar and the current time label, keep them updated every second
+        """
         self.loop_is_running = True
         if not self.paused:
             song_duration = int(TinyTag.get(self.current_song).duration)
@@ -241,7 +260,9 @@ class MusicPlayer:
         self.status_frame.after(1000, self.loop)
 
     def progress_bar_slide(self, _):
-
+        """
+        Handle the progress bar slide event
+        """
         self.progress_bar.config(value=int(self.progress_bar.get()))
 
         if not self.paused:
@@ -252,11 +273,17 @@ class MusicPlayer:
             self.current_time_label.config(text=f"{time.strftime('%M:%S', time.gmtime(self.progress_bar.get()))}")
 
     def volume_bar_slide(self, _):
+        """
+        Handle the volume bar slide event
+        """
         pygame.mixer.music.set_volume(self.volume_bar.get())
 
         self.volume_value_label.config(text=f"{int(pygame.mixer.music.get_volume() * 100)}%")
 
     def change_play_mode(self):
+        """
+        Switch between play modes
+        """
         if self.play_mode == "Tuần tự":
             self.play_mode = "Lặp lại"
         elif self.play_mode == "Lặp lại":
@@ -267,6 +294,9 @@ class MusicPlayer:
         self.play_mode_button.config(text=f"{self.play_mode}")
 
     def play_shuffle(self):
+        """
+        Play a random song
+        """
         self.listbox.selection_clear(0, tk.END)
 
         self.listbox.selection_set(randint(0, self.listbox.size() - 1))
@@ -277,24 +307,36 @@ class MusicPlayer:
             self.pause_resume_music()
 
     def logout(self):
+        """
+        Log out from the current account
+        """
+
         self.stop_thread = True
         self.voice_control_thread.join(timeout=0.25)
         pygame.mixer.music.stop()
+
+        #Destroy the current window and show the login form
         self.top.destroy()
         self.master.deiconify()
         
 
     def show_song_manager(self):
+        """
+        Show the song manager form
+        """
         song_manager_form = SongManagerForm(tk.Toplevel(self.top), self.username, self.access_token)
         self.top.wait_window(song_manager_form.master)
         self.get_song_list()
 
     def get_song_list(self):
+        """
+        Get the song list from the server via API
+        """
         self.listbox.delete(0, tk.END)
         headers = {
             "Authorization": f"Bearer {self.access_token}"
         }
-        response = requests.get(f"http://192.168.43.224:8000/{self.username}/songs", headers=headers)
+        response = requests.get(f"http://{server_url}:8000/{self.username}/songs", headers=headers)
 
         if response.json():
             self.play.config(state=tk.NORMAL)
@@ -326,18 +368,24 @@ class MusicPlayer:
             self.listbox.selection_set(0)
 
     def get_song(self, title):
+        """
+        Get the song from the server via API by the given title
+        """
         if not os.path.exists(f"cache_song/{title}"):
             headers = {
                 "Authorization": f"Bearer {self.access_token}"
             }
-            response = requests.get(f"http://192.168.43.224:8000/{self.username}/songs/{title}", headers=headers)
+            response = requests.get(f"http://{server_url}:8000/{self.username}/songs/{title}", headers=headers)
 
             with open(f"cache_song/{title}", "wb") as f:
                 f.write(base64.b64decode(response.json()))
         return f"cache_song/{title}"
     
     def voice_control(self):
-        HOST = "192.168.43.224"
+        """
+        Handle the voice control by start a thread and listen to the raspberry, to receive the command from it
+        """
+        HOST = server_url
         PORT = 1234
         
         wake_up = False

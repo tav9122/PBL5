@@ -4,8 +4,12 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 import requests
 
+server_url = "192.168.137.1"
 
 def is_currently_playing(song_title):
+    """
+    This function check if the song is currently playing
+    """
     song_path = f"cache_song/{song_title}"
     try:
         os.rename(song_path, song_path)
@@ -15,6 +19,9 @@ def is_currently_playing(song_title):
 
 
 def is_in_cache(song_title):
+    """
+    This function check if the song is in cache already
+    """
     song_path = f"cache_song/{song_title}"
     return os.path.exists(song_path)
 
@@ -47,6 +54,9 @@ class SongManagerForm:
         self.get_song_list()
 
     def add_songs(self):
+        """
+        Open a file dialog to select songs to add to the server
+        """
         file_types = [('Music Files', """*.mp3 *.mp4 *.m4a *.m4b *.m4r *.m4v *.alac *.aax *.aaxc *.wav *.ogg *.opus 
         *.flac *.wma""")]
         song_paths = filedialog.askopenfilenames(title="Chọn các bài hát", filetypes=file_types)
@@ -86,7 +96,7 @@ class SongManagerForm:
             'Authorization': f'Bearer {self.access_token}'
         }
 
-        response = requests.post("http://192.168.43.224:8000/add-songs", json=data, headers=headers)
+        response = requests.post(f"http://{server_url}:8000/add-songs", json=data, headers=headers)
         if response.json()["result"] == "success":
             messagebox.showinfo("Kết quả", response.json()["message"])
             self.get_song_list()
@@ -94,6 +104,9 @@ class SongManagerForm:
             messagebox.showerror("Kết quả", response.json()["message"])
 
     def delete_songs(self):
+        """
+        Delete selected songs from the server
+        """
         selected_songs = self.listbox.curselection()
         if len(selected_songs) == 0:
             messagebox.showerror("Lỗi", "Chọn ít nhất một bài để xóa")
@@ -119,7 +132,7 @@ class SongManagerForm:
             'Authorization': f'Bearer {self.access_token}'
         }
 
-        response = requests.post("http://192.168.43.224:8000/delete-songs", json=data, headers=headers)
+        response = requests.post(f"http://{server_url}:8000/delete-songs", json=data, headers=headers)
 
         if response.json()["result"] == "success":
             messagebox.showinfo("Kết quả", response.json()["message"])
@@ -132,11 +145,14 @@ class SongManagerForm:
             messagebox.showerror("Kết quả", response.json()["message"])
 
     def get_song_list(self):
+        """
+        Request to the server to get the song list
+        """
         self.listbox.delete(0, tk.END)
         headers = {
             'Authorization': f'Bearer {self.access_token}'
         }
 
-        response = requests.get(f"http://192.168.43.224:8000/{self.username}/songs", headers=headers)
+        response = requests.get(f"http://{server_url}:8000/{self.username}/songs", headers=headers)
         for title in response.json():
             self.listbox.insert(tk.END, title)

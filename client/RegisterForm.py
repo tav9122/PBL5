@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import messagebox
 import requests
 
+server_url = "192.168.137.1"
 
 class RegisterForm:
     def __init__(self, master):
@@ -30,7 +31,7 @@ class RegisterForm:
         self.register_password_label = tk.Label(self.register_password_frame, text="Mật khẩu:  ", borderwidth=0)
         self.register_password_label.pack(side=tk.LEFT, padx=(13, 0))
 
-        self.register_password_entry = tk.Entry(self.register_password_frame, width=30)
+        self.register_password_entry = tk.Entry(self.register_password_frame, width=30, show="*")
         self.register_password_entry.pack(side=tk.LEFT, padx=(0, 13))
 
         self.confirm_password_frame = tk.Frame(self.register_window)
@@ -39,7 +40,7 @@ class RegisterForm:
         self.confirm_password_label = tk.Label(self.confirm_password_frame, text="Nhập lại mật khẩu:  ", borderwidth=0)
         self.confirm_password_label.pack(side=tk.LEFT, padx=(13, 0))
 
-        self.confirm_password_entry = tk.Entry(self.confirm_password_frame, width=30)
+        self.confirm_password_entry = tk.Entry(self.confirm_password_frame, width=30, show="*")
         self.confirm_password_entry.pack(side=tk.LEFT, padx=(0, 13))
 
         self.function_frame = tk.Frame(self.register_window)
@@ -49,6 +50,9 @@ class RegisterForm:
         self.button_submit.pack(side=tk.RIGHT, padx=(0, 20))
 
     def submit_registration(self):
+        """
+        Submit registration form
+        """
         username = self.register_username_entry.get()
         password = self.register_password_entry.get()
         confirm_password = self.confirm_password_entry.get()
@@ -66,7 +70,7 @@ class RegisterForm:
                 "password": password
             }
 
-            response = requests.post("http://192.168.43.224:8000/register", json=credentials)
+            response = requests.post(f"http://{server_url}:8000/register", json=credentials)
 
             if response.json()["result"] == "success":
                 messagebox.showinfo("Kết quả", response.json()["message"], parent=self.register_window)

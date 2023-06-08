@@ -22,6 +22,10 @@ def get_config():
     return Settings()
 
 def get_db_cursor():
+    """
+    This function returns a cursor object for a database connection.
+    @return A cursor object for a database connection.
+    """
     conn = psycopg2.connect(
         host="localhost",
         port=5432,
@@ -38,7 +42,7 @@ audio_format = 'wav'
 
 record_path = 'temp/record.wav'
 trimmed_path = 'temp/trimmed.wav'
-model_path = 'new_model'
+model_path = 'new_model_2'
 
 for key in class_names:
     name = f"{model_path}/model_{key}.pkl"
@@ -46,6 +50,11 @@ for key in class_names:
         model[key] = pickle.load(file)
 
 def get_mfcc(file_path):
+    """
+    Given a file path, extract the Mel-frequency cepstral coefficients (MFCC) from the audio file.
+    @param file_path - the path to the audio file
+    @return The MFCC of the audio file.
+    """
     y, sr = librosa.load(file_path)
        
     hop_length = math.floor(sr * 0.010)
@@ -61,14 +70,24 @@ def get_mfcc(file_path):
 
 
 def detect_leading_silence(sound, silence_threshold=-25.0, chunk_size=10):
-        trim_ms = 0
-        assert chunk_size > 0
-        while sound[trim_ms:trim_ms + chunk_size].dBFS < silence_threshold and trim_ms < len(sound):
-            trim_ms += chunk_size
-        return trim_ms
+    """
+    Given a sound file, detect the amount of leading silence in the file.
+    @param sound - the sound file
+    @param silence_threshold - the threshold below which a chunk is considered silent
+    @param chunk_size - the size of the chunks to split the sound file into
+    @return the duration of the leading silence in seconds
+    """
+    trim_ms = 0
+    assert chunk_size > 0
+    while sound[trim_ms:trim_ms + chunk_size].dBFS < silence_threshold and trim_ms < len(sound):
+        trim_ms += chunk_size
+    return trim_ms
 
 
 def predict(file_name=None):
+    """
+    Given a file path, predict the word spoken in the audio file.
+    """
     if not file_name:
         file_name = record_path
         
@@ -125,6 +144,11 @@ class DeleteSongList(BaseModel):
 
 @app.post("/login")
 async def login(credentials: Credentials,Authorize: AuthJWT=Depends()):
+    """
+    This function handles the login process.
+    @param credentials - the username and password of the user
+    @return A message indicating whether the login was successful or not.
+    """
     cursor = get_db_cursor()
 
     cursor.execute('''
@@ -141,6 +165,11 @@ async def login(credentials: Credentials,Authorize: AuthJWT=Depends()):
 
 @app.post("/register")
 async def register(credentials: Credentials):
+    """
+    This function handles the registration process.
+    @param credentials - the username and password of the user
+    @return A message indicating whether the registration was successful or not.
+    """
     cursor = get_db_cursor()
 
     try:
@@ -161,6 +190,11 @@ async def register(credentials: Credentials):
 
 @app.get("/{username}/songs")
 async def get_song_titles(username: str, Authorize: AuthJWT=Depends()):
+    """
+    This function handles the retrieval of the song titles of a user.
+    @param username - the username of the user
+    @return A list of song titles.
+    """
     try :
         Authorize.jwt_required()
     except Exception as e:
@@ -184,6 +218,12 @@ async def get_song_titles(username: str, Authorize: AuthJWT=Depends()):
 
 @app.get("/{username}/songs/{title}")
 async def get_song(username: str, title: str, Authorize: AuthJWT=Depends()):
+    """
+    This function handles the retrieval of a song of a user.
+    @param username - the username of the user
+    @param title - the title of the song
+    @return The audio of the song.
+    """
     try :
         Authorize.jwt_required()
     except Exception as e:
@@ -206,6 +246,11 @@ async def get_song(username: str, title: str, Authorize: AuthJWT=Depends()):
 
 @app.post("/add-songs")
 async def add_songs(add_song_list: AddSongList, Authorize: AuthJWT=Depends()):
+    """
+    This function handles the addition of songs to the database.
+    @param add_song_list - the list of songs to be added
+    @return A message indicating whether the addition was successful or not.
+    """
     try :
         Authorize.jwt_required()
     except Exception as e:
@@ -232,6 +277,11 @@ async def add_songs(add_song_list: AddSongList, Authorize: AuthJWT=Depends()):
 
 @app.post("/delete-songs")
 async def delete_songs(delete_song_list: DeleteSongList, Authorize: AuthJWT=Depends()):
+    """
+    This function handles the deletion of songs from the database.
+    @param delete_song_list - the list of songs to be deleted
+    @return A message indicating whether the deletion was successful or not.
+    """
     try :
         Authorize.jwt_required()
     except Exception as e:
@@ -257,6 +307,11 @@ async def delete_songs(delete_song_list: DeleteSongList, Authorize: AuthJWT=Depe
 
 @app.post("/predict")
 async def create_upload_file(file: UploadFile = File(...)):
+    """
+    This function handles the prediction of the word in the audio file.
+    @param file - the audio file
+    @return The predicted word.
+    """
     with open("temp/record.wav", "wb") as f:
         contents = await file.read()
         f.write(contents)

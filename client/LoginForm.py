@@ -4,6 +4,7 @@ import requests
 from MusicPlayer import MusicPlayer
 from RegisterForm import RegisterForm
 
+server_url = "192.168.137.1"
 
 class LoginForm:
     def __init__(self, master):
@@ -44,9 +45,15 @@ class LoginForm:
         self.button_login.pack(side=tk.RIGHT, padx=(0, 20))
 
     def show_registration_form(self):
+        """
+        This function shows the registration form.
+        """
         register_form = RegisterForm(self.master)
 
     def login(self):
+        """
+        This function handles the login process.
+        """
         username = self.username_entry.get()
         password = self.password_entry.get()
 
@@ -59,7 +66,7 @@ class LoginForm:
             "password": password
         }
 
-        response = requests.post("http://192.168.43.224:8000/login", json=credentials)
+        response = requests.post(f"http://{server_url}:8000/login", json=credentials)
 
         if response.json()["result"] == "success":
             messagebox.showinfo("Kết quả", response.json()["message"])
