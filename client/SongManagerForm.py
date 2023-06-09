@@ -66,6 +66,8 @@ class SongManagerForm:
 
         songs = []
         duplicate_songs = []
+
+        # Read audio data and encode it to base64 string to send to the server
         for song_path in song_paths:
             with open(song_path, 'rb') as f:
                 audio_data = f.read()
@@ -82,6 +84,7 @@ class SongManagerForm:
             }
             songs.append(song)
 
+        # Show error message if there are duplicate songs in the list
         if duplicate_songs:
             messagebox.showerror("Error", f"Các bài lặp lại: {', '.join(duplicate_songs)} sẽ không được thêm")
 
@@ -114,6 +117,8 @@ class SongManagerForm:
 
         song_titles = []
         current_playing_song = None
+        
+        # Get song titles from the listbox and check if they are in cache and currently playing or not
         for idx in selected_songs:
             song_title = self.listbox.get(idx)
             if is_in_cache(song_title) and is_currently_playing(song_title):

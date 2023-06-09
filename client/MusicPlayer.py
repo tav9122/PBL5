@@ -122,14 +122,17 @@ class MusicPlayer:
         """
         Play music
         """
+
         if self.paused:
             self.pause_resume_music()
 
         self.current_song = self.get_song(self.listbox.get(self.listbox.curselection()[0]))
 
+        # Reset progress bar to 0
         self.progress_bar.config(value=0)
         self.progress_bar.config(to=TinyTag.get(self.current_song).duration)
 
+        # Reset current time label to 00:00 and max time label to song duration
         self.current_time_label.config(text=f"{time.strftime('%M:%S', time.gmtime(0))}")
         self.duration_label.config(
             text=f"{time.strftime('%M:%S', time.gmtime(TinyTag.get(self.current_song).duration))}")
@@ -173,12 +176,14 @@ class MusicPlayer:
 
         self.listbox.selection_clear(0, tk.END)
 
+        # If current song is not the first song in the listbox then play previous song else play last song in the listbox
         if current_index > 0:
             self.listbox.selection_set(current_index - 1)
 
         else:
             self.listbox.selection_set(self.listbox.size() - 1)
 
+        # Play the song despite of the current state of the music player (paused or not)
         status = self.paused
         self.play_music()
         if status:
@@ -196,12 +201,14 @@ class MusicPlayer:
 
         self.listbox.selection_clear(0, tk.END)
 
+        # If current song is not the last song in the listbox then play next song else play first song in the listbox
         if current_index < self.listbox.size() - 1:
             self.listbox.selection_set(current_index + 1)
 
         else:
             self.listbox.selection_set(0)
 
+        # Play the song despite of the current state of the music player (paused or not)
         status = self.paused
         self.play_music()
         if status:
@@ -211,11 +218,14 @@ class MusicPlayer:
         """
         Fast forward song
         """
+        # Increase progress bar value by 5 seconds
         self.progress_bar.config(value=self.progress_bar.get() + 5)
 
+        # If progress bar value is greater than song duration then play next song
         if self.progress_bar.get() > TinyTag.get(self.current_song).duration:
             self.next_song()
 
+        # If music is not paused then play music from the new progress bar value else update current time label
         if not self.paused:
             pygame.mixer.music.load(self.current_song)
             pygame.mixer.music.play(start=int(self.progress_bar.get()))
@@ -227,11 +237,15 @@ class MusicPlayer:
         """
         Rewind song
         """
+
+        # Decrease progress bar value by 5 seconds
         self.progress_bar.config(value=self.progress_bar.get() - 5)
 
+        # If progress bar value is less than 0 then play previous song
         if self.progress_bar.get() < 0:
             self.previous_song()
 
+        # If music is not paused then play music from the new progress bar value else update current time label
         if not self.paused:
             pygame.mixer.music.load(self.current_song)
             pygame.mixer.music.play(start=int(self.progress_bar.get()))
@@ -243,14 +257,19 @@ class MusicPlayer:
         """
         This loop is to manage the progress bar and the current time label, keep them updated every second
         """
+
+        # This is to prevent the loop from running multiple times.
         self.loop_is_running = True
         if not self.paused:
             song_duration = int(TinyTag.get(self.current_song).duration)
 
+            # Increase progress bar value by 1 second every second
             self.progress_bar.config(value=self.progress_bar.get() + 1)
 
+            # Update current time label every second to match the progress bar value    
             self.current_time_label.config(text=f"{time.strftime('%M:%S', time.gmtime(self.progress_bar.get()))}")
-
+            
+            # If progress bar value is greater than song duration then play next song if play mode is not "Lặp lại" else play current song again
             if self.progress_bar.get() > song_duration:
                 if self.play_mode == "Lặp lại":
                     self.play_music()
