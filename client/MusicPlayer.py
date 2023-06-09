@@ -13,7 +13,7 @@ from playsound import playsound
 
 from SongManagerForm import SongManagerForm
 
-server_url = "192.168.137.1"
+server_url = "192.168.43.224"
 
 class MusicPlayer:
     def __init__(self, master, username, access_token):

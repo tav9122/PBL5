@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import messagebox
 import requests
 
-server_url = "192.168.137.1"
+server_url = "192.168.43.224"
 
 class RegisterForm:
     def __init__(self, master):

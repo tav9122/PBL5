@@ -4,7 +4,7 @@ import requests
 from MusicPlayer import MusicPlayer
 from RegisterForm import RegisterForm
 
-server_url = "192.168.137.1"
+server_url = "192.168.43.224"
 
 class LoginForm:
     def __init__(self, master):

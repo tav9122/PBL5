@@ -4,7 +4,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 import requests
 
-server_url = "192.168.137.1"
+server_url = "192.168.43.224"
 
 def is_currently_playing(song_title):
     """

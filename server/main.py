@@ -42,7 +42,7 @@ audio_format = 'wav'
 
 record_path = 'temp/record.wav'
 trimmed_path = 'temp/trimmed.wav'
-model_path = 'new_model_2'
+model_path = 'new_model_4'
 
 for key in class_names:
     name = f"{model_path}/model_{key}.pkl"
@@ -69,7 +69,7 @@ def get_mfcc(file_path):
     return X.T 
 
 
-def detect_leading_silence(sound, silence_threshold=-25.0, chunk_size=10):
+def detect_leading_silence(sound, silence_threshold=-18.0, chunk_size=10):
     """
     Given a sound file, detect the amount of leading silence in the file.
     @param sound - the sound file
